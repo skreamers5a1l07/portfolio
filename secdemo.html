@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Strength Checker | Security Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            max-width: 500px;
+            width: 100%;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #1e2a3a;
+            margin-bottom: 0.5rem;
+        }
+
+        .sub {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        input:focus {
+            border-color: #ff6b4a;
+        }
+
+        .toggle-pw {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            user-select: none;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+        }
+
+        .strength-bar {
+            height: 8px;
+            background: #eee;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s, background 0.3s;
+        }
+
+        .strength-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .tips {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .tips h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .tips ul {
+            padding-left: 20px;
+            color: #555;
+            font-size: 0.85rem;
+        }
+
+        .weak { background: #dc3545; }
+        .medium { background: #ffc107; }
+        .strong { background: #28a745; }
+
+        footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.7rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>🔐 Password Strength Checker</h1>
+    <div class="sub">Security demo — test how strong your password is</div>
+
+    <div class="input-group">
+        <input type="password" id="password" placeholder="Enter password...">
+        <button class="toggle-pw" onclick="togglePassword()">👁️</button>
+    </div>
+
+    <div class="strength-bar">
+        <div class="strength-fill" id="strengthFill"></div>
+    </div>
+    <div class="strength-text" id="strengthText">Enter a password</div>
+
+    <div class="tips">
+        <h3>💡 Security tips</h3>
+        <ul id="tipsList">
+            <li>At least 8 characters</li>
+            <li>Use uppercase & lowercase</li>
+            <li>Include numbers (0-9)</li>
+            <li>Add special characters (!@#$%)</li>
+        </ul>
+    </div>
+    <footer>For educational purposes only — never share your real passwords</footer>
+</div>
+
+<script>
+    const passwordInput = document.getElementById('password');
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthText = document.getElementById('strengthText');
+
+    function checkStrength(pw) {
+        let score = 0;
+        let tips = [];
+
+        if (pw.length >= 8) score++;
+        else tips.push('❌ At least 8 characters');
+
+        if (pw.match(/[A-Z]/) && pw.match(/[a-z]/)) score++;
+        else tips.push('❌ Use uppercase & lowercase letters');
+
+        if (pw.match(/[0-9]/)) score++;
+        else tips.push('❌ Add numbers (0-9)');
+
+        if (pw.match(/[^A-Za-z0-9]/)) score++;
+        else tips.push('❌ Include special characters (!@#$% etc)');
+
+        if (score === 4) return { level: 'Strong 💪', class: 'strong', tips: [] };
+        if (score === 3) return { level: 'Medium 👍', class: 'medium', tips: tips.slice(0,2) };
+        return { level: 'Weak ⚠️', class: 'weak', tips: tips };
+    }
+
+    function updateTips(tipsArray) {
+        const tipsUl = document.getElementById('tipsList');
+        if (tipsArray.length === 0) {
+            tipsUl.innerHTML = '<li>✅ Great! Your password is strong</li>';
+            return;
+        }
+        tipsUl.innerHTML = tipsArray.map(t => `<li>${t}</li>`).join('');
+    }
+
+    function updateStrength() {
+        const pw = passwordInput.value;
+        if (!pw) {
+            strengthFill.style.width = '0%';
+            strengthText.innerText = 'Enter a password';
+            strengthFill.className = 'strength-fill';
+            updateTips(['At least 8 characters', 'Use uppercase & lowercase', 'Include numbers', 'Add special characters']);
+            return;
+        }
+
+        const result = checkStrength(pw);
+        strengthFill.style.width = 
+            result.level.includes('Weak') ? '33%' : 
+            result.level.includes('Medium') ? '66%' : '100%';
+        strengthFill.className = `strength-fill ${result.class}`;
+        strengthText.innerText = `Strength: ${result.level}`;
+
+        if (result.tips && result.tips.length > 0) {
+            updateTips(result.tips);
+        } else {
+            updateTips([]);
+        }
+    }
+
+    function togglePassword() {
+        const type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+    }
+
+    passwordInput.addEventListener('input', updateStrength);
+</script>
+
+</body>
+</html>
